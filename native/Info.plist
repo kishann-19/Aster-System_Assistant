@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict>
+<key>CFBundleIdentifier</key><string>local.aster.bridge</string><key>CFBundleName</key><string>Aster</string>
+<key>NSMicrophoneUsageDescription</key><string>Aster listens for voice commands and optional clap or snap wake while voice control is enabled.</string>
+<key>NSSpeechRecognitionUsageDescription</key><string>Aster transcribes your spoken commands. Apple may process speech when on-device recognition is unavailable.</string>
+<key>NSCalendarsFullAccessUsageDescription</key><string>Aster reads your next seven days of events when you connect Calendar.</string>
+<key>NSRemindersFullAccessUsageDescription</key><string>Aster displays your incomplete Apple Reminders when you connect them.</string>
+<key>NSAppleEventsUsageDescription</key><string>Aster reads unread message subjects and senders from Apple Mail when you request a sync.</string>
+<key>NSContactsUsageDescription</key><string>Aster looks up the contact you name for a call or WhatsApp draft.</string></dict></plist>

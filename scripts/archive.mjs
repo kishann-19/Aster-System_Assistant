@@ -1,0 +1,10 @@
+import {execFileSync} from 'node:child_process';
+import {readFile,writeFile,rm} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+const source='release/Aster-darwin-arm64/Aster.app',zip='release/Aster-Mac.zip';
+execFileSync('codesign',['--verify','--deep',source],{stdio:'inherit'});
+await rm(zip,{force:true});
+execFileSync('ditto',['-c','-k','--sequesterRsrc','--keepParent',source,zip],{stdio:'inherit'});
+const sha=createHash('sha256').update(await readFile(zip)).digest('hex');
+await writeFile('release/SHA256SUMS.txt',sha+'  Aster-Mac.zip\n');
+console.log('Created '+zip+' with checksum.');

@@ -1,0 +1,17 @@
+node_modules/
+dist/
+release/
+native/build/
+native/voice-model/
+public/wasm/
+public/models/
+.DS_Store
+.env
+.env.*
+!.env.example
+*.log
+*.zip
+*.dmg
+workspace*.json
+*.pem
+*.p12

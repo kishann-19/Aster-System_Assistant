@@ -9,6 +9,5 @@ mkdirSync('windows/build', {recursive: true});
 execFileSync(join(framework, 'csc.exe'), [
   '/nologo', '/target:exe', '/out:' + join('windows', 'build', 'AsterBridge.exe'),
   '/reference:' + join(reference, 'System.Speech.dll'),
-  '/reference:' + join(reference, 'System.Web.Extensions.dll'),
   join('windows', 'Bridge.cs'),
 ], {stdio: 'inherit'});

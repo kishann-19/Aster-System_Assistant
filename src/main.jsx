@@ -708,11 +708,14 @@ function App() {
         else routedReply = routed.reply;
       }
       switch (c.type) {
-        case "codex":
+        case "codex": {
           if (!desktop) throw Error("Aster Talks needs the Mac app.");
-          await window.aster.codex(c.request);
-          answer = "Your request is queued in Aster Talks.";
+          const result = await window.aster.codex(c.request);
+          answer = result.started
+            ? "Your request is queued in Aster Talks."
+            : "Your request is queued. Open Aster Talks to start it.";
           break;
+        }
         case "codexPrompt":
           answer = "What would you like me to ask in Aster Talks?";
           break;

@@ -232,13 +232,19 @@ app.whenReady().then(async () => {
     const cli = "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex";
     if (!fs.existsSync(cli))
       throw Error("The Codex app is unavailable on this Mac.");
-    await execFileAsync("/usr/bin/open", ["-a", "/Applications/ChatGPT.app"]);
     const { stdout } = await execFileAsync(cli, [
-      "queue", "--thread", threadId, "--message", request.trim(), "--resume",
+      "queue", "--thread", threadId, "--message", request.trim(),
     ], { timeout: 15000, maxBuffer: 100000 });
     if (!stdout.includes("Queued message"))
       throw Error("Could not queue the request in Aster Talks.");
-    return true;
+    try {
+      await execFileAsync("/usr/bin/open", [
+        "-a", "/Applications/ChatGPT.app", "codex://threads/wake/" + threadId,
+      ], { timeout: 15000 });
+      return { started: true };
+    } catch {
+      return { started: false };
+    }
   });
   handle("service:open", async (name) => {
     if (!Object.hasOwn(SERVICES, name)) throw Error("Unknown service");

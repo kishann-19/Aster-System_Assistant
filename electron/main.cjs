@@ -261,6 +261,7 @@ app.whenReady().then(async () => {
       ...((cmd.action === "speechStart" || cmd.action === "wakeConfigure")
         ? {
             wakeEnabled: cmd.wakeEnabled === true,
+            standby: cmd.standby === true,
             wakeMode: cmd.wakeMode === "single" ? "single" : "double",
             wakeThreshold: Number.isFinite(cmd.wakeThreshold)
               ? Math.max(0.15, Math.min(0.85, cmd.wakeThreshold))

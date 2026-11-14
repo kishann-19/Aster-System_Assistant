@@ -3,11 +3,13 @@ import Foundation
 struct WakeSettings: Equatable {
     let enabled: Bool
     let double: Bool
+    let standby: Bool
     let threshold: Double
 
     init(_ command: [String: Any]) {
         enabled = command["wakeEnabled"] as? Bool ?? false
-        double = command["wakeMode"] as? String != "single"
+        standby = command["standby"] as? Bool ?? true
+        double = standby && command["wakeMode"] as? String != "single"
         threshold = max(0.15, min(0.85, command["wakeThreshold"] as? Double ?? 0.45))
     }
 }

@@ -6,9 +6,9 @@ struct WakeAudioTests {
     // detector receives ordinary PCM in the same chunks a microphone supplies.
     static func replay(_ times: [Double], amplitude: Double = 0.14, duration: Double = 0.002,
                        sensitivity: Double = 0.45, double: Bool = true, rate: Int = 48000,
-                       chunk: Int = 1024, stride: Int = 1, background: Double = 0.002) -> Int {
+                       chunk: Int = 1024, stride: Int = 1, background: Double = 0.002, standby: Bool = true) -> Int {
         let settings = WakeSettings(["wakeEnabled": true, "wakeMode": double ? "double" : "single",
-                                     "wakeThreshold": sensitivity])
+                                     "wakeThreshold": sensitivity, "standby": standby])
         var detector = ImpulseWakeDetector(sampleRate: Double(rate))
         let starts = times.map { Int($0 * Double(rate)) }
         let total = (starts.last ?? rate) + rate / 3
@@ -43,7 +43,8 @@ struct WakeAudioTests {
                 precondition(replay([0.4, 0.9], amplitude: 0.35, duration: 0.045, rate: rate, chunk: chunk) == 1, "Double clap")
             }
         }
-        precondition(replay([0.3]) == 0, "Isolated snap in double mode")
+        precondition(replay([0.3], standby: false) == 1, "One clap puts active Aster to sleep")
+        precondition(replay([0.3], standby: true) == 0, "One clap does not wake Aster in double mode")
         precondition(replay([0.3, 0.39]) == 0, "Echo")
         precondition(replay([0.3, 1.7]) == 0, "Expired pair")
         precondition(replay([0.3, 1.7, 2.0]) == 1, "Fresh pair after timeout")

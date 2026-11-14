@@ -394,6 +394,16 @@ function App() {
         commandRef.current("wake up");
         return;
       }
+      if (
+        msg.event === "sleepSound" &&
+        dataRef.current.settings.soundWake &&
+        wantMic.current &&
+        !standbyRef.current &&
+        !busyRef.current
+      ) {
+        commandRef.current("go to sleep");
+        return;
+      }
       if (msg.event === "partial") setPartial(msg.text);
       if (msg.event === "speechError") {
         wantMic.current = false;
@@ -460,10 +470,11 @@ function App() {
     window.aster.native({
       action: "wakeConfigure",
       wakeEnabled: !!data.settings.soundWake,
+      standby,
       wakeMode: data.settings.wakeMode,
       wakeThreshold: data.settings.wakeThreshold,
     }).catch((e) => notify(e.message));
-  }, [ready, data.settings.soundWake, data.settings.wakeMode, data.settings.wakeThreshold]);
+  }, [ready, standby, data.settings.soundWake, data.settings.wakeMode, data.settings.wakeThreshold]);
   function scheduleListen() {
     clearTimeout(resumeTimer.current);
     if (wantMic.current) resumeTimer.current = setTimeout(() => listen(), 450);
@@ -477,6 +488,7 @@ function App() {
         await window.aster.native({
           action: "speechStart",
           wakeEnabled: !!dataRef.current.settings.soundWake,
+          standby: standbyRef.current,
           wakeMode: dataRef.current.settings.wakeMode,
           wakeThreshold: dataRef.current.settings.wakeThreshold,
         });
@@ -2672,17 +2684,17 @@ function App() {
                 </div>
                 <div className="setting-row">
                   <div>
-                    <strong>Clap / snap wake</strong>
+                    <strong>Clap / snap sleep and wake</strong>
                     <small>
-                      In the Mac app, turn on the microphone and say “Go to sleep.”
-                      In two-sound mode, clap or snap twice about half a second apart.
+                      In the Mac app, turn on the microphone. Clap or snap once to sleep.
+                      Use the selected wake sound to wake Aster.
                     </small>
                   </div>
                   <button
                     className={
                       "switch " + (data.settings.soundWake ? "on" : "")
                     }
-                    aria-label="Clap or snap wake"
+                    aria-label="Clap or snap sleep and wake"
                     role="switch"
                     aria-checked={!!data.settings.soundWake}
                     onClick={() =>

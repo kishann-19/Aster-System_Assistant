@@ -93,7 +93,7 @@ final class Bridge: NSObject, AVSpeechSynthesizerDelegate {
                             if detector.consume(samples, count: Int(buffer.frameLength), stride: buffer.stride, settings: settings) {
                                 DispatchQueue.main.async {
                                     if self.listening, self.generation == token, self.wakePreferences.get() == current {
-                                        output(["event":"wakeSound"])
+                                        output(["event":current.standby ? "wakeSound" : "sleepSound"])
                                     }
                                 }
                             }

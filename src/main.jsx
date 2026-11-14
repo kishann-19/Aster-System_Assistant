@@ -708,6 +708,14 @@ function App() {
         else routedReply = routed.reply;
       }
       switch (c.type) {
+        case "codex":
+          if (!desktop) throw Error("Aster Talks needs the Mac app.");
+          await window.aster.codex(c.request);
+          answer = "Your request is queued in Aster Talks.";
+          break;
+        case "codexPrompt":
+          answer = "What would you like me to ask in Aster Talks?";
+          break;
         case "setup":
           setSetupOpen(true);
           answer =
@@ -2681,6 +2689,20 @@ function App() {
                   >
                     <i />
                   </button>
+                </div>
+                <div className="voice-options">
+                  <label>
+                    Aster Talks chat ID
+                    <input
+                      aria-label="Aster Talks chat ID"
+                      value={data.settings.codexThreadId || ""}
+                      placeholder="Paste your Codex chat ID"
+                      onChange={(e) => {
+                        const codexThreadId = e.target.value.trim();
+                        update((s) => ({ ...s, settings: { ...s.settings, codexThreadId } }));
+                      }}
+                    />
+                  </label>
                 </div>
                 <div className="setting-row">
                   <div>

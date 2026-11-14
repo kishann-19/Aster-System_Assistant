@@ -10,7 +10,9 @@ const {
   systemPreferences,
   powerMonitor,
 } = require("electron");
-const { spawn } = require("node:child_process");
+const { spawn, execFile } = require("node:child_process");
+const { promisify } = require("node:util");
+const execFileAsync = promisify(execFile);
 const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -219,6 +221,23 @@ app.whenReady().then(async () => {
     if (!validState(s)) throw Error("Invalid workspace");
     state = s;
     save();
+    return true;
+  });
+  handle("codex:send", async (request) => {
+    if (typeof request !== "string" || !request.trim() || request.length > 12000)
+      throw Error("Please give Aster a request for Codex.");
+    const threadId = state?.settings?.codexThreadId;
+    if (typeof threadId !== "string" || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(threadId))
+      throw Error("Add the Aster Talks chat ID in Settings first.");
+    const cli = "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex";
+    if (!fs.existsSync(cli))
+      throw Error("The Codex app is unavailable on this Mac.");
+    await execFileAsync("/usr/bin/open", ["-a", "/Applications/ChatGPT.app"]);
+    const { stdout } = await execFileAsync(cli, [
+      "queue", "--thread", threadId, "--message", request.trim(), "--resume",
+    ], { timeout: 15000, maxBuffer: 100000 });
+    if (!stdout.includes("Queued message"))
+      throw Error("Could not queue the request in Aster Talks.");
     return true;
   });
   handle("service:open", async (name) => {

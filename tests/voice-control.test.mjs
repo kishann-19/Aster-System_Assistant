@@ -46,3 +46,16 @@ test('spoken numbers are normalized without interpreting arbitrary names as numb
  assert.equal(communications.phoneNumber('plus one two zero two five five five zero one zero zero'),'+12025550100');
  assert.equal(communications.phoneNumber('Alex'),null);assert.equal(communications.phoneNumber('tel:1234567890'),null);
 });
+
+test('use GPT routes the complete request to the dedicated Codex chat', () => {
+  assert.deepEqual(parseCommand('Aster, use GPT open Safari and research laptops'), {
+    type: 'codex',
+    request: 'open Safari and research laptops',
+  });
+  assert.deepEqual(parseCommand('summarise this using GPT'), {type: 'chat', text: 'summarise this using GPT'});
+  assert.deepEqual(parseCommand('remind me tomorrow at nine use GPT'), {
+    type: 'codex',
+    request: 'remind me tomorrow at nine',
+  });
+  assert.deepEqual(parseCommand('use GPT'), {type: 'codexPrompt'});
+});

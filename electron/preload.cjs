@@ -31,6 +31,7 @@ contextBridge.exposeInMainWorld("aster", {
   cancelCommunication: () => ipcRenderer.invoke("communication:cancel"),
   reveal: () => ipcRenderer.invoke("window:show"),
   browse: (c) => ipcRenderer.invoke("web:open", c),
+  codex: (request) => ipcRenderer.invoke("codex:send", request),
   onHide: (fn) => on("controls:hide", fn),
   telemetry: () => ipcRenderer.invoke("mac:telemetry"),
   control: (c) => ipcRenderer.invoke("mac:control", c),

@@ -2,6 +2,11 @@ import {parseControl} from './control-commands.mjs';
 import * as chrono from 'chrono-node';
 export function parseCommand(input, now = new Date()) {
   const text = input.trim().replace(/^(?:hey\s+)?aster[,\s:]*/i, '').trim();
+  const gptTrigger = /\buse\s+(?:chat\s*)?gpt\b/i;
+  if (gptTrigger.test(text)) {
+    const request = text.replace(gptTrigger, '').replace(/^[\s,:;.!-]+/, '').trim();
+    return request ? {type:'codex', request} : {type:'codexPrompt'};
+  }
   const control=parseControl(input);if(control)return control;
   let m;
   if (/^(stop listening|turn off (the )?mic|mute|stop voice)[.!]?$/i.test(text)) return {type:'mute'};

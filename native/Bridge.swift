@@ -11,10 +11,7 @@ final class Bridge: NSObject, AVSpeechSynthesizerDelegate {
     let controls=MacControls()
     let capture=CaptureManager()
     let pointer=PointerController()
-    var wakeDetector=ImpulseWakeDetector()
-    var wakeEnabled=false
-    var wakeDouble=true
-    var wakeThreshold=0.45
+    let wakePreferences = WakePreferences()
     let store=EKEventStore()
     let engine=AVAudioEngine()
     var request:SFSpeechAudioBufferRecognitionRequest?
@@ -83,12 +80,22 @@ final class Bridge: NSObject, AVSpeechSynthesizerDelegate {
                         self.request=req
                         let input=self.engine.inputNode;let format=input.outputFormat(forBus:0)
                         guard format.sampleRate>0,format.channelCount>0 else {output(["id":id,"error":"No microphone is available."]);return}
+                        var detector = ImpulseWakeDetector(sampleRate: format.sampleRate)
+                        var settings = self.wakePreferences.get()
                         input.installTap(onBus:0,bufferSize:1024,format:format){buffer,_ in
                             req.append(buffer)
-                            if self.wakeEnabled,let samples=buffer.floatChannelData?[0] {
-                                let count=Int(buffer.frameLength);var peak:Double=0,sum:Double=0
-                                for i in 0..<count {let v=Double(samples[i]);peak=max(peak,abs(v));sum+=v*v}
-                                if self.wakeDetector.sample(peak:peak,rms:sqrt(sum/Double(max(1,count))),now:ProcessInfo.processInfo.systemUptime,threshold:self.wakeThreshold,double:self.wakeDouble){DispatchQueue.main.async {if self.listening{output(["event":"wakeSound"])}}}
+                            let current = self.wakePreferences.get()
+                            if current != settings {
+                                detector = ImpulseWakeDetector(sampleRate: format.sampleRate)
+                                settings = current
+                            }
+                            guard settings.enabled, let samples = buffer.floatChannelData?[0] else { return }
+                            if detector.consume(samples, count: Int(buffer.frameLength), stride: buffer.stride, settings: settings) {
+                                DispatchQueue.main.async {
+                                    if self.listening, self.generation == token, self.wakePreferences.get() == current {
+                                        output(["event":"wakeSound"])
+                                    }
+                                }
                             }
                         };self.tapped=true
                         do {self.engine.prepare();try self.engine.start();self.listening=true} catch {self.stopSpeech();output(["id":id,"error":error.localizedDescription]);return}
@@ -192,7 +199,9 @@ final class Bridge: NSObject, AVSpeechSynthesizerDelegate {
             reply(["ok":true,"message":"Browser command: \(operation)."])
         case "activeApp":reply(["name":NSWorkspace.shared.frontmostApplication?.localizedName ?? "Unknown"])
         case "speechStart":
-            wakeEnabled=cmd["wakeEnabled"] as? Bool ?? false;wakeDouble=(cmd["wakeMode"] as? String ?? "double") != "single";wakeThreshold=max(0.15,min(0.85,cmd["wakeThreshold"] as? Double ?? 0.45));startSpeech(id)
+            wakePreferences.set(WakeSettings(cmd));startSpeech(id)
+        case "wakeConfigure":
+            wakePreferences.set(WakeSettings(cmd));reply(["ok":true])
         case "speechStop":stopSpeech();if id>0{reply(["ok":true])}
         case "pointer":pointer.handle(cmd)
         case "calendar":

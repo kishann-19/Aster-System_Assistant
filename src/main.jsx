@@ -384,6 +384,7 @@ function App() {
       }
       if (
         msg.event === "wakeSound" &&
+        dataRef.current.settings.soundWake &&
         wantMic.current &&
         standbyRef.current &&
         !busyRef.current
@@ -454,6 +455,15 @@ function App() {
       notify("25-minute focus session complete. Time for a break.");
     }
   }, [remaining, data.focusEnds]);
+  useEffect(() => {
+    if (!desktop || !ready || !wantMic.current) return;
+    window.aster.native({
+      action: "wakeConfigure",
+      wakeEnabled: !!data.settings.soundWake,
+      wakeMode: data.settings.wakeMode,
+      wakeThreshold: data.settings.wakeThreshold,
+    }).catch((e) => notify(e.message));
+  }, [ready, data.settings.soundWake, data.settings.wakeMode, data.settings.wakeThreshold]);
   function scheduleListen() {
     clearTimeout(resumeTimer.current);
     if (wantMic.current) resumeTimer.current = setTimeout(() => listen(), 450);
@@ -2664,8 +2674,8 @@ function App() {
                   <div>
                     <strong>Clap / snap wake</strong>
                     <small>
-                      Experimental sound detection while in standby. Other sharp
-                      sounds can trigger it. Microphone must stay on.
+                      In the Mac app, turn on the microphone and say “Go to sleep.”
+                      In two-sound mode, clap or snap twice about half a second apart.
                     </small>
                   </div>
                   <button
@@ -2694,12 +2704,10 @@ function App() {
                     <select
                       aria-label="Wake sound"
                       value={data.settings.wakeMode || "double"}
-                      onChange={(e) =>
-                        update((s) => ({
-                          ...s,
-                          settings: { ...s.settings, wakeMode: e.target.value },
-                        }))
-                      }
+                      onChange={(e) => {
+                        const wakeMode = e.target.value;
+                        update((s) => ({ ...s, settings: { ...s.settings, wakeMode } }));
+                      }}
                     >
                       <option value="double">Two claps / snaps</option>
                       <option value="single">One clap / snap</option>
@@ -2710,15 +2718,10 @@ function App() {
                     <select
                       aria-label="Wake sensitivity"
                       value={data.settings.wakeThreshold || 0.45}
-                      onChange={(e) =>
-                        update((s) => ({
-                          ...s,
-                          settings: {
-                            ...s.settings,
-                            wakeThreshold: Number(e.target.value),
-                          },
-                        }))
-                      }
+                      onChange={(e) => {
+                        const wakeThreshold = Number(e.target.value);
+                        update((s) => ({ ...s, settings: { ...s.settings, wakeThreshold } }));
+                      }}
                     >
                       <option value={0.2}>High</option>
                       <option value={0.45}>Balanced</option>

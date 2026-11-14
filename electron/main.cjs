@@ -246,6 +246,7 @@ app.whenReady().then(async () => {
       ![
         "status",
         "speechStart",
+        "wakeConfigure",
         "speechStop",
         "calendar",
         "reminders",
@@ -257,7 +258,7 @@ app.whenReady().then(async () => {
       throw Error("Unknown command");
     return native({
       action: cmd.action,
-      ...(cmd.action === "speechStart"
+      ...((cmd.action === "speechStart" || cmd.action === "wakeConfigure")
         ? {
             wakeEnabled: cmd.wakeEnabled === true,
             wakeMode: cmd.wakeMode === "single" ? "single" : "double",

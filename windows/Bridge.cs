@@ -48,14 +48,19 @@ class AsterBridge {
         engine.LoadGrammar(new DictationGrammar());
         engine.SetInputToDefaultAudioDevice();
         engine.SpeechRecognized += (sender, args) => {
-            if (token != generation || String.IsNullOrWhiteSpace(args.Result.Text)) return;
-            Send(new Dictionary<string, object> { { "event", "transcript" }, { "text", args.Result.Text } });
-            StopSpeech();
+            if (String.IsNullOrWhiteSpace(args.Result.Text) ||
+                Interlocked.CompareExchange(ref generation, token + 1, token) != token) return;
+            string text = args.Result.Text;
+            ThreadPool.QueueUserWorkItem(_ => {
+                if (generation != token + 1) return;
+                StopSpeech();
+                Send(new Dictionary<string, object> { { "event", "transcript" }, { "text", text } });
+            });
         };
         recognition = engine;
         engine.RecognizeAsync(RecognizeMode.Multiple);
         deadline = new Timer(_ => {
-            if (token != generation) return;
+            if (Interlocked.CompareExchange(ref generation, token + 1, token) != token) return;
             StopSpeech();
             Send(new Dictionary<string, object> { { "event", "transcript" }, { "text", "" } });
         }, null, 45000, Timeout.Infinite);

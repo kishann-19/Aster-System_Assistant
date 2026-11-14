@@ -29,6 +29,22 @@ export default function SetupPanel({
       setWorking(false);
     }
   };
+  if (window.aster?.platform === "win32") {
+    return (
+      <div className="setup-overlay">
+        <section className="setup-panel" role="dialog" aria-modal="true" aria-labelledby="setup-title">
+          <button className="icon-button setup-close" aria-label="Close setup" onClick={onClose}><X /></button>
+          <span className="module-tag">WELCOME TO ASTER · WINDOWS PREVIEW</span>
+          <h2 id="setup-title">Set up Aster on Windows</h2>
+          <p>Enable your microphone and an installed Windows speech recognition language to use voice commands.</p>
+          <button className="soft-button" onClick={onVoice}>Enable voice <ArrowUpRight size={14} /></button>
+          <p>Tasks, reminders, web links and local conversation are available. For local conversation, install and start Ollama, then download a model.</p>
+          <p>Clap wake, whole-computer gestures, Apple services, screen capture and Aster Talks are available in the Mac edition.</p>
+          <button className="soft-button" onClick={onClose}>Continue</button>
+        </section>
+      </div>
+    );
+  }
   return (
     <div className="setup-overlay">
       <section

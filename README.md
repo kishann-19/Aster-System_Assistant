@@ -1,12 +1,26 @@
 # Aster
 
-**A voice and camera-gesture assistant for your Mac.** A technical command center, local conversation, neural speech, tasks and reminders, and explicit controls for apps, websites and writing.
+**A personal assistant for your computer.** Aster offers voice commands, local conversation, tasks, reminders and web shortcuts. The Mac edition also includes camera gestures and computer controls.
 
-**0.4 preview · Apple Silicon · macOS 15 or later.** This is an experimental community build, not universal or error-free computer control. Intel Macs, Windows and Linux are not supported. See [validation](VALIDATION.md) for what has actually been tested.
+**0.5 preview · Apple Silicon macOS 15 or later · Windows 10/11 x64.** The Windows edition supports speech through installed Windows Speech Recognition, tasks, reminders, the default browser and optional local Ollama models. Clap wake, computer control, screen capture, Apple services and the Aster Talks connection are available on Mac. See [validation](VALIDATION.md) for tested behavior.
 
 ## Get started
 
-If a packaged preview is available under [Releases](https://github.com/kishann-19/Aster-System_Assistant/releases), download `Aster-Mac.zip`, verify its SHA-256 checksum, extract it and place Aster in Applications before granting permissions. Current builds are ad hoc signed and **not Apple-notarized**; a friction-free public installation is still pending Developer ID signing and notarization. Do not disable macOS security protections. Building from source is available below.
+Install Aster from Terminal on an Apple Silicon Mac:
+
+```sh
+curl -fsSL https://github.com/kishann-19/Aster-System_Assistant/releases/download/v0.5.0/install-mac.sh | bash
+```
+
+Install Aster from PowerShell on 64-bit Windows:
+
+```powershell
+irm https://github.com/kishann-19/Aster-System_Assistant/releases/download/v0.5.0/install-windows.ps1 | iex
+```
+
+The commands download the preview from [GitHub Releases](https://github.com/kishann-19/Aster-System_Assistant/releases), verify the archive checksum and install it in your user account. Mac builds are ad hoc signed and Windows builds are unsigned, so operating-system prompts may require you to review the app before opening it. You can also download the archives from Releases.
+
+On Windows, enable microphone access in Windows Settings and install a Windows Speech Recognition language if necessary. To use local conversation, install and run Ollama separately and download a model, such as `ollama pull qwen3.5:4b`. The Windows preview does not include the Mac computer-control or clap features.
 
 Open Aster, then **Settings → Setup & permissions** (or say “Show setup”). Enable voice, review Accessibility for typing/clicks/gestures, and enable Screen & System Audio Recording only if you use captures. On a new Mac, the **Install local conversation model** button downloads Ollama and Qwen 3.5 4B. Allow roughly 6 GB of free space and internet access for setup. No subscription or API key is required. Camera processing and Kokoro voice generation run locally.
 
@@ -36,7 +50,7 @@ Open Aster, then **Settings → Setup & permissions** (or say “Show setup”).
 | Next desktop / Zoom in | Sends the corresponding Mac/app shortcut |
 | Tell me a joke / Let’s chat / Help me think this through | Has a casual conversation using the local model |
 
-Say **“Go to sleep”**, then **“Aster, wake up”** or clap/snap twice for a greeting. Sound wake is experimental: sharp noises can trigger it and quiet snaps may be missed. It works only while Aster is running in standby with its microphone on, on an awake/unlocked Mac. Sensitivity and single/double sound options are in Settings.
+On Mac, clap once to put Aster to sleep, then clap twice to wake it. You can also say **“Go to sleep”** and **“Aster, wake up”**. Sound wake is experimental: sharp noises can trigger it and quiet snaps may be missed. It works only while Aster is running in standby with its microphone on, on an awake/unlocked Mac. Sensitivity and single/double sound options are in Settings.
 
 Speech input pauses while Aster prepares or speaks a reply; wait for **Listening**. “Stop listening” turns the microphone off. Restart it with the voice button. During dictation, ordinary phrases are literal text; prefix a control with **“Command”**. Dictation stops if the target field changes. It is not suitable for passwords or terminal commands.
 
@@ -67,7 +81,7 @@ Some apps do not expose usable Accessibility controls; Apple Voice Control can b
 
 ## Build from source
 
-Install Node.js 22.12+ and Apple Command Line Tools on an Apple Silicon Mac, then run in this folder:
+On an Apple Silicon Mac, install Node.js 22.12+ and Apple Command Line Tools, then run in this folder:
 
 ```sh
 npm ci
@@ -85,6 +99,8 @@ node scripts/archive.mjs # ZIP and SHA-256 checksum
 ```
 
 The browser preview supports the dashboard, tasks and local AI/voice service; native Mac control requires the desktop app. The GitHub workflow builds downloadable preview artifacts on an Apple Silicon runner. Version tags publish prereleases.
+
+For a Windows source build, install Node.js 22.12+ and the .NET Framework 4.8 developer pack, then run `npm ci`, `npm run setup` and `npm run package:windows`. The packaged application is in `release/Aster-win32-x64`.
 
 ## Project
 

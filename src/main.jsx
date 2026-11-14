@@ -56,6 +56,7 @@ import {
   cancelVoice,
 } from "./services.mjs";
 const desktop = !!window.aster;
+const windows = window.aster?.platform === "win32";
 const services = [
   {
     id: "mail",
@@ -2707,7 +2708,8 @@ function App() {
                     />
                   </label>
                 </div>
-                <div className="setting-row">
+                {windows && <p>Windows preview supports voice commands, tasks, reminders and browser links. Clap wake and whole-computer control are available on Mac.</p>}
+                {!windows && <div className="setting-row">
                   <div>
                     <strong>Clap / snap sleep and wake</strong>
                     <small>
@@ -2734,8 +2736,8 @@ function App() {
                   >
                     <i />
                   </button>
-                </div>
-                <div className="voice-options">
+                </div>}
+                {!windows && <div className="voice-options">
                   <label>
                     Wake sound
                     <select
@@ -2765,7 +2767,7 @@ function App() {
                       <option value={0.7}>Low</option>
                     </select>
                   </label>
-                </div>
+                </div>}
                 <div className="setting-row">
                   <div>
                     <strong>Start in standby</strong>

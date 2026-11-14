@@ -16,3 +16,5 @@ public/models/
 workspace*.json
 *.pem
 *.p12
+
+windows/build/

@@ -6,6 +6,7 @@ const on = (channel, fn) => {
 };
 contextBridge.exposeInMainWorld("aster", {
   desktop: true,
+  platform: process.platform,
   setupAI: () => ipcRenderer.invoke("setup:ai"),
   cancelSetup: () => ipcRenderer.invoke("setup:cancel"),
   onSetup: (fn) => on("setup:progress", fn),

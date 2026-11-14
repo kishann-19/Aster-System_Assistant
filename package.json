@@ -16,7 +16,8 @@
     "package": "npm run build && npm run native && node scripts/package.mjs",
     "setup": "node node_modules/electron/install.js && npm run assets && npm run native && npm run voice-assets",
     "voice-assets": "node scripts/voice-assets.mjs",
-    "setup-ai": "node scripts/setup-ai.mjs"
+    "setup-ai": "node scripts/setup-ai.mjs",
+    "package:windows": "npm run build && node scripts/build-windows.mjs && node scripts/package-windows.mjs"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "1.1.1",

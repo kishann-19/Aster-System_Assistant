@@ -1,4 +1,4 @@
-name: Test and build Aster for Mac
+name: Test and build Aster
 on:
   push:
     branches: [main]
@@ -10,7 +10,7 @@ permissions:
 jobs:
   mac:
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,27 +23,67 @@ jobs:
       - run: npm run setup
       - run: npm run package
       - run: node scripts/archive.mjs
+      - run: cp release/SHA256SUMS.txt release/Aster-Mac.sha256
       - uses: actions/upload-artifact@v4
         with:
           name: Aster-Mac-Apple-Silicon
           path: |
             release/Aster-Mac.zip
-            release/SHA256SUMS.txt
+            release/Aster-Mac.sha256
+          retention-days: 30
+  windows:
+    runs-on: windows-2022
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run assets
+      - run: npm run voice-assets
+      - run: npm run package:windows
+      - name: Verify Windows bridge
+        shell: pwsh
+        run: |
+          $result = '{"id":1,"action":"status"}' | & release/Aster-win32-x64/resources/AsterBridge.exe
+          $status = $result | ConvertFrom-Json
+          if ($status.id -ne 1 -or $status.platform -ne 'windows') { throw 'Bridge smoke test failed' }
+      - name: Create Windows archive
+        shell: pwsh
+        run: |
+          Compress-Archive -Path release/Aster-win32-x64 -DestinationPath release/Aster-Windows.zip
+          $hash = (Get-FileHash -Algorithm SHA256 release/Aster-Windows.zip).Hash.ToLower()
+          [IO.File]::WriteAllText('release/Aster-Windows.sha256', "$hash  Aster-Windows.zip`n")
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Aster-Windows-x64
+          path: |
+            release/Aster-Windows.zip
+            release/Aster-Windows.sha256
           retention-days: 30
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: mac
+    needs: [mac, windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           name: Aster-Mac-Apple-Silicon
           path: release
-      - name: Publish preview download
+      - uses: actions/download-artifact@v4
+        with:
+          name: Aster-Windows-x64
+          path: release
+      - name: Publish preview downloads
         env:
           GH_TOKEN: ${{ github.token }}
           REPOSITORY: ${{ github.repository }}
           RELEASE_TAG: ${{ github.ref_name }}
-        run: gh release create "$RELEASE_TAG" release/Aster-Mac.zip release/SHA256SUMS.txt --repo "$REPOSITORY" --prerelease --title "Aster $RELEASE_TAG · Mac preview" --notes "Apple Silicon, macOS 15+. Experimental community build. Ad hoc signed; Apple notarization is not configured. See README and VALIDATION before enabling computer control."
+        run: |
+          gh release create "$RELEASE_TAG" release/Aster-Mac.zip release/Aster-Mac.sha256 release/Aster-Windows.zip release/Aster-Windows.sha256 scripts/install-mac.sh scripts/install-windows.ps1 --repo "$REPOSITORY" --prerelease --title "Aster $RELEASE_TAG preview" --notes "Apple Silicon macOS and Windows x64 previews. The Windows preview supports voice, tasks, reminders, browser links and optional local models. Mac-only features remain unavailable on Windows. See the README for installation and limitations."

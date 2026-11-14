@@ -44,10 +44,13 @@ let win,
   lastPointer = 0;
 const pending = new Map();
 const entry = path.join(__dirname, "../dist/index.html");
-const nativePath = () =>
-  app.isPackaged
-    ? path.join(process.resourcesPath, "AsterBridge")
-    : path.join(__dirname, "../native/build/AsterBridge");
+const nativePath = () => {
+  const windows = process.platform === "win32";
+  const name = windows ? "AsterBridge.exe" : "AsterBridge";
+  return app.isPackaged
+    ? path.join(process.resourcesPath, name)
+    : path.join(__dirname, windows ? "../windows/build" : "../native/build", name);
+};
 function emit(channel, data) {
   if (win && !win.isDestroyed()) win.webContents.send(channel, data);
 }
@@ -73,8 +76,8 @@ function native(command) {
   });
 }
 function startHelper() {
-  if (process.platform !== "darwin" || !fs.existsSync(nativePath())) return;
-  helper = spawn(nativePath(), [], { stdio: ["pipe", "pipe", "pipe"] });
+  if (!["darwin", "win32"].includes(process.platform) || !fs.existsSync(nativePath())) return;
+  helper = spawn(nativePath(), [], { stdio: ["pipe", "pipe", "pipe"], windowsHide: true });
   helper.stdout.on("data", (chunk) => {
     buffer += chunk;
     let idx;
@@ -141,8 +144,7 @@ function createWindow() {
     minHeight: 700,
     title: "Aster",
     backgroundColor: "#050d18",
-    titleBarStyle: "hiddenInset",
-    trafficLightPosition: { x: 20, y: 22 },
+    ...(process.platform === "darwin" ? { titleBarStyle: "hiddenInset", trafficLightPosition: { x: 20, y: 22 } } : {}),
     webPreferences: {
       preload: path.join(__dirname, "preload.cjs"),
       nodeIntegration: false,
@@ -199,6 +201,7 @@ app.whenReady().then(async () => {
       }
       try {
         const types = details.mediaTypes || [];
+        if (process.platform === "win32") { callback(types.length > 0); return; }
         const checks = await Promise.all(
           types.map((t) =>
             systemPreferences.askForMediaAccess(
@@ -229,6 +232,7 @@ app.whenReady().then(async () => {
     const threadId = state?.settings?.codexThreadId;
     if (typeof threadId !== "string" || !/^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(threadId))
       throw Error("Add the Aster Talks chat ID in Settings first.");
+    if (process.platform !== "darwin") throw Error("Aster Talks is currently available on Mac.");
     const cli = "/Applications/ChatGPT.app/Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex";
     if (!fs.existsSync(cli))
       throw Error("The Codex app is unavailable on this Mac.");
@@ -381,9 +385,17 @@ app.whenReady().then(async () => {
   });
   handle("web:open", async (command) => {
     const c = mac.validateWeb(command);
+    if (process.platform === "win32") {
+      if (command.browser !== "default") throw Error("Use the default browser on Windows.");
+      await shell.openExternal(c.url);
+      return { ok: true };
+    }
     return native(c);
   });
-  handle("mac:control", (command) => mac.control(command, native));
+  handle("mac:control", (command) => {
+    if (process.platform === "win32") throw Error("Computer control is not available in the Windows preview.");
+    return mac.control(command, native);
+  });
   handle("ai:route", (model, messages) => ai.route(model, messages));
   handle("ai:models", () => ai.listModels());
   handle("ai:chat", (model, messages) => ai.chat(model, messages));

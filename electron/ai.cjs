@@ -9,7 +9,7 @@ async function ensureServer(){
   if(await reachable())return;
   if(starting)return starting;
   starting=(async()=>{
-    const candidates=[path.join(runtimeDir,'bin/ollama'),'/Applications/Ollama.app/Contents/Resources/ollama','/opt/homebrew/bin/ollama'];
+    const candidates=[...(process.platform==='win32'?[path.join(process.env.LOCALAPPDATA||'', 'Programs', 'Ollama', 'ollama.exe')]:[]),path.join(runtimeDir,'bin/ollama'),'/Applications/Ollama.app/Contents/Resources/ollama','/opt/homebrew/bin/ollama'];
     const binary=candidates.find(p=>fs.existsSync(p));if(!binary)throw Error('The local AI engine is not installed. See the setup guide.');
     fs.mkdirSync(runtimeDir,{recursive:true});const log=fs.openSync(path.join(runtimeDir,'server.log'),'a',0o600);
     const child=spawn(binary,['serve'],{detached:true,stdio:['ignore',log,log],env:{...process.env,OLLAMA_HOST:'127.0.0.1:11434',OLLAMA_MODELS:path.join(runtimeDir,'models'),OLLAMA_NO_CLOUD:'1',OLLAMA_MAX_LOADED_MODELS:'1',OLLAMA_NUM_PARALLEL:'1'}});

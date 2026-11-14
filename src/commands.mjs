@@ -18,7 +18,13 @@ export function parseCommand(input, now = new Date()) {
     const result = chrono.parse(m[1], now, {forwardDate:true})[0];
     if(!result) return {type:'clarifyReminder',message:'Include a time, for example: “Remind me to stretch in 20 minutes.”'};
     const date=result.start.date();
-    let title=(m[1].slice(0,result.index)+' '+m[1].slice(result.index+result.text.length)).replace(/^\s*(?:to|that)\s+/i,'').replace(/\s+(at|on|by)\s*$/i,'').trim();
+    const before = m[1].slice(0, result.index).replace(/(?:^|\s)(?:at|on|by|for)\s*$/i, '').trim();
+    const after = m[1].slice(result.index + result.text.length).replace(/^[\s,;:]+/, '').trim();
+    const title = [before, after].filter(Boolean).join(' ')
+      .replace(/^(?:to|that)\b\s*/i, '')
+      .replace(/\s+([.!?])/g, '$1')
+      .replace(/^[.!?]+$/, '')
+      .trim();
     if(!title) return {type:'clarifyReminder',message:'What should I remind you about? Try “Remind me to drink water in 30 minutes.”'};
     if(date<=now) return {type:'clarifyReminder',message:'That time has already passed. Please choose a future time.'};
     return {type:'reminder',title:title.slice(0,200),due:date.toISOString()};

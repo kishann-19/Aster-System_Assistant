@@ -2,7 +2,8 @@ node_modules/
 dist/
 release/
 native/build/
-native/voice-model/
+native/voice-model/*
+!native/voice-model/LICENSE
 public/wasm/
 public/models/
 .DS_Store
